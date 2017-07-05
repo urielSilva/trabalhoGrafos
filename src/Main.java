@@ -1,10 +1,12 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Random;
 import java.util.Scanner;
 
 import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
+import ca.pjer.ekmeans.EKmeans;
 
 public class Main {
 	
@@ -24,13 +26,50 @@ public class Main {
         }
         Matrix laplacian = buildLaplacian(affinityMatrix);
         EigenvalueDecomposition evd = laplacian.eig();  
-        double[] eigenValues= evd.getRealEigenvalues();
         double[][] eigenVectors = evd.getV().getArray();
-        System.out.println("autovalores:" + eigenValues.length);
-        System.out.println("autovetores:" + eigenVectors.length + " por " + eigenVectors[0].length);
+        Matrix yMatrix = buildYMatrix(eigenVectors);
+        EKmeans result = runKMeans(yMatrix);
         
         
+	}
+	
+	public static EKmeans runKMeans(Matrix yMatrix) {
+		int n = ROWS_SIZE; 
+        int k = 6; 
+        Random random = new Random(System.currentTimeMillis());
         
+        double[][] centroids = new double[n][k];
+        
+        for (int i = 0; i < n; i++) {
+			centroids[i][0] = Math.abs(1);
+		    centroids[i][1] = Math.abs(2);
+		    centroids[i][2] = Math.abs(3);
+			centroids[i][3] = Math.abs(4);
+		    centroids[i][4] = Math.abs(5);
+		    centroids[i][5] = Math.abs(6);
+		}
+        
+        EKmeans kmeans = new EKmeans(centroids, yMatrix.getArray());
+        kmeans.run();
+        return kmeans;
+	}
+	
+	public static Matrix buildYMatrix(double[][] eigenVectors) {
+		double[][] Y = new double[ROWS_SIZE][6];
+		for (int i = 0; i < eigenVectors.length; i++) {
+            for (int j = 0; j < 6; j++) {
+            	
+            	double sumValue = 0;
+            	for(int k = 0; k < 6; k++ ) {
+            		sumValue += Math.pow(eigenVectors[i][k], 2);
+            	}
+            	double sqrtValue = Math.sqrt(sumValue);
+            	double finalValue = eigenVectors[i][j] / sqrtValue;
+            	System.out.println(finalValue);
+            	Y[i][j] = finalValue;
+            }
+        }
+		return new Matrix(Y);
 	}
 
 	private static Matrix buildLaplacian(double[][] affinityMatrix) {
